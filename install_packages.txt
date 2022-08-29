@@ -1,0 +1,12 @@
+Install 'tydiverse'
+
+Debian/Ubuntu:
+
+- sudo apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev
+
+- install.packages("tidyverse")
+
+Install 'ragg'
+
+- sudo apt-get install libfontconfig1-dev -y
+
