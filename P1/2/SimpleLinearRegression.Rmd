@@ -1,0 +1,102 @@
+---
+title: "Regresión Lineal Simple"
+author: "willandru"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Cargamos Librerias
+
+```{r setup, include=FALSE}
+library('GGally')
+```
+
+
+## Cargamos un Dataset
+
+Seleccionando un dataset de Kaggle, procedemos a abrirlo para explorar los datos.
+
+```{r }
+df <- read.csv("insurance.csv")
+```
+
+## Análisis Exploratorio de los Datos
+
+```{r }
+head(df)
+```
+```{r }
+str(df)
+```
+```{r }
+colSums(!is.na(df))
+```
+
+```{r }
+summary(df)
+```
+```{r }
+plot(df)
+```
+
+
+```{r }
+library('GGally')
+ggpairs(df, columns=1:7, ggplot2::aes(colour=sex), progress = FALSE)
+```
+
+```{r }
+library('GGally')
+ggpairs(df, columns=1:7, ggplot2::aes(colour=smoker), progress = FALSE)
+```
+
+
+
+## Creating a Linear Regression Model
+
+Basandonos en los anterioires resultados, haremos un regresion lineal  de charges vs age para No fumadores ya que obtuvimos el mayor coeficiente de correlación en este caso
+
+```{r }
+library('GGally')
+ggpairs(df, columns=1:7, ggplot2::aes(colour=region), progress = FALSE) 
+```
+
+```{r }
+library(dplyr)
+n<- select(filter(df, smoker == 'no'),c(age,sex,bmi, children, smoker, region, charges))
+ggpairs(n, columns=1:7, ggplot2::aes(colour=sex), progress = FALSE) 
+
+```
+Verificamos la normalidad de la variable Dependiente
+```{r }
+shapiro.test(n$charges)
+
+```
+
+## MODELO
+
+```{r }
+lm1<- lm(charges~age, data=n)
+summary(lm1)
+```
+Verificamos la normalidad de los residuales
+```{r }
+shapiro.test(resid(lm1))
+
+```
+
+
+
+```{r }
+library(ggfortify)
+autoplot(lm1)
+```
+
+## Conclusion
+
+Pudimos publicar nuestro primer documento en Rpubs y estamos preparando los conceptos de Regresion Lineal
+
+
+
+
+
