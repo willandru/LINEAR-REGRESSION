@@ -1,0 +1,217 @@
+---
+title: "Regresion Lineal Simple"
+author: "willandru"
+date: "`r Sys.Date()`"
+output: html_document
+---
+# DATA SET:   "COSTO SALUD"
+
+El dataset fue extraido de *Kaggle*: https://www.kaggle.com/datasets/mirichoi0218/insurance
+
+*COLUMNAS*
+
+- **edad**: Edad del beneficiario principal
+
+- **sexo**: Genero femenino o masculino
+
+- **bmi**: Índice de masa corporal, que proporciona una comprensión del peso relativamente alto o bajo en relación con la altura, idealmente 18,5 a 24,9.
+
+- **niños**: Número de niños cubiertos por el seguro de salud / Número de dependientes
+
+- **fumador**: Fuma o no fuma
+
+- **región**: el área residencial del beneficiario en los EE. UU., noreste, sureste, suroeste, noroeste.
+
+- *cargos*: costos médicos individuales facturados por el seguro de salud
+
+
+
+## Cargar Librerias
+```{r }
+library('GGally')
+library('dplyr')
+library('lmtest')
+```
+## Información los Datos
+
+```{r }
+
+df <- read.csv('insurance.csv')
+head(df)
+```
+
+A continuacion vemos los tipos de datos y el tamaño del dataframe :
+```{r }
+str(df)
+```
+## Gráfica de Dispersion 
+Utilizando la funcion nativa *plot* de R podemos visualizar un diagrama de dispersion para todas las variables del dataframe:
+
+```{r }
+plot(df)
+```
+
+Del anterior gráfico podemos ver que hay una relación lineal subdividida en tres grupos para las variables *edad* y *costo de salud*, si pudieramos determinar porque estan ocurriendo estos grupos podriamos crera una realacion lineal entre estas 2 variables para los subgrupos.
+
+## Visualizamos la relación lineal y los 3 subgrupos que aparecen entre la EDAD y el COSTO
+
+```{r }
+plot(x = df$age, y=df$charges)
+```
+
+
+## Visualizamos la distribucion de los datos, la dispersion de los datos y los coeficientes de relacion por colores según el sexode la población
+```{r }
+ggpairs(df, columns=1:7, ggplot2::aes(colour=sex), progress = FALSE)
+```
+
+Podemos ver que tenemos unos coeficientes de relacion de 0.2 y ademas vemos que la gráfica de *edad* vs *costo* no puede ser explicada por 1 solo modelo lineal.
+
+## Distribucion de los datos, Dispersion de los datos y Coeficientes de relacion por colores según 'fumadores' en la población
+```{r }
+ggpairs(df, columns=1:7, ggplot2::aes(colour=smoker), progress = FALSE)
+```
+
+Aquí podemos observar varias cosas útiles:
+- Existe una correlación muy alta para los 'smoker=yes' de 0.8 con respecto al 'bmi'
+- Existe una correlación de 0.6 para los 'smokers=no' con respecto a la edad
+
+
+```{r }
+ggpairs(df, columns=1:7, ggplot2::aes(colour=as.factor(region)), progress = FALSE)
+```
+
+No encontramos mejores relaciones visualizando los datos segun la 'region'.
+No pudimos encontrar la razón de los 3 subgrupos del diagrama de dispersion *edad vs costo* así que decidímos realizar el analisis para los NO FUMADORES y aparte para los SI FUMADORES, de esta manera podremos explicar la variable 'costo' utilizando la variable más correlacionada en cada caso, que como se observo anteriormete es la *edad* para los no fumadores y el indice *bmi* para los si fumadores.
+
+
+## Creamos un dataset para los fumadores y no fumadores
+```{r }
+
+non<- select(filter(df, smoker == 'no'),c(age,sex,bmi, children, smoker, region, charges))
+yes<- select(filter(df, smoker == 'yes'),c(age,sex,bmi, children, smoker, region, charges))
+
+```
+### Observamos correlacion de 0.6 entre  'edad' vs 'costo' para los NO FUMADORES
+
+```{r }
+ggpairs(non, columns=1:7, ggplot2::aes(colour=as.factor(sex)), progress = FALSE)
+```
+
+### Observamos correlacion de 0.8 entre  'bmi' vs 'costo' para los SI FUMADORES
+```{r }
+ggpairs(yes, columns=1:7, ggplot2::aes(colour=as.factor(sex)), progress = FALSE)
+```
+
+# MODELOS REGRESIÓN LINEAL
+
+## CREANDO LOS MODELOS DE REGRESIÓN LINEAL : 1 PARA FUMADORES Y OTRO PARA NO FUMADORES
+
+Los siguientes modelos buscan explicar el 'costo de salud' para personas fumadoras y no fumadoras, ya que se encontro que esta es la variable mas correlacionada con el 'costo'. Ademas se hará un modelo de regresión lineal para los no fumadores basandose en la 'edad' , mientras que para los si fumadores utilizaremos el indece de 'bmi' de las personas para predeir el costo de salud.
+
+## NO FUMADORES: COSTO vs EDAD 
+
+```{r }
+lm1 <- lm(non$charges~non$age)
+summary(lm1)
+```
+
+```{r }
+
+plot(non$age, non$charges)+
+abline( -2091.42, 267.25)
+```
+
+### Verificamos los supuestos del modelo: Normalidad de residuiales y Homogeneidad de varianza
+
+Test de Normalidad sobre los residuales: 
+Ho: Los errores son Normales
+Ha: Los errores No son Normales
+p-value <0.05 se rechaza la Ho
+
+```{r }
+l1res<- residuals(lm1)
+shapiro.test(l1res)
+```
+Los residuales NO pasa la prueba de NORMALIDAD para este modelo
+
+### Homogeneidad de varianza
+Breush-Pagan test:
+Ho: Las varianzas son homogeneas
+Ha: LAs varianzas no son homogeneas
+Necesitamos un p-value mayor a 0.05 para No rechazar la hipotesis nula
+```{r }
+bptest(lm1)
+```
+La varianza es Homogénea
+
+### Quitamos el intercepto del modelo
+
+```{r }
+lm1.1 <- lm(non$charges~0 +non$age)
+summary(lm1.1)
+```
+
+**RESUMEN DEL MODELO:**
+
+**Y = 220.162 x AGE**
+
+
+```{r }
+plot(non$age, non$charges)+
+abline( 0, 267.25)
+```
+Este modelo sin intercepto es mucho mejro que el anterioir y ademas el R-cuadrado ha subido de 0.4 a 0.8
+```{r }
+l1res.1<- residuals(lm1.1)
+shapiro.test(l1res.1)
+```
+
+## Si FUMADORES: COSTO vs BMI 
+
+```{r }
+lm2 <- lm(yes$charges~yes$bmi)
+summary(lm2)
+```
+Quitando el intercepto:
+```{r }
+lm2.1 <- lm(yes$charges~ 0 + yes$bmi)
+summary(lm2.1)
+```
+
+Obtenemos un R-cuadrado del 95% ¡
+
+**RESUMEN DEL MODELO:**
+
+**Y = 1061.08 x BMI**
+
+
+```{r }
+plot(yes$bmi, yes$charges)+
+abline( 0, 1061.08)
+```
+
+
+### HACEMOS VERIFICACION DE LOS SUPUESTOS
+
+```{r }
+l2res<- residuals(lm2.1)
+shapiro.test(l2res)
+```
+```{r }
+bptest(lm2)
+```
+Podemos decir que en el modelo con intercepto existe homogeneidad de las varianzas pero en general sigue sin cumplirse el supuesto de normalidad de los residuales
+
+## CONCLUSIÓN
+
+```{r }
+plot(yes$bmi,yes$charges,type="p",col="red", ylim = c(0, 60000), xlab="Edad y BMI ", ylab="Costo salud")+
+lines(non$age, non$charges,type="p",col="green")+
+  abline( 0, 267.25)+
+   abline( 0, 1061)
+```
+
+Observando las distintas relaciones de las variables de interes con respecto a su comportamiento en las distintas variables categoricas, pudimos darnos cuentas de relaciones lineales importantes que nos permiten analizar estas categorias por separado pero llegar a *un modelo significativamente explicativo*.
+
+El problema ahora sería verificar porque los residuales de los modelos NO estan cunmpliendo el supuesto de normalidad, tal vez haciendo una transformación adecuada de los datos para solucionarlo.
