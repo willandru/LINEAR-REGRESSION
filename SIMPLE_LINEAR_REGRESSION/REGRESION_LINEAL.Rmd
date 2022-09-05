@@ -22,7 +22,7 @@ El dataset fue extraido de *Kaggle*: https://www.kaggle.com/datasets/mirichoi021
 
 - **región**: el área residencial del beneficiario en los EE. UU., noreste, sureste, suroeste, noroeste.
 
-- *cargos*: costos médicos individuales facturados por el seguro de salud
+- **cargos**: costos médicos individuales facturados por el seguro de salud
 
 
 
@@ -44,6 +44,12 @@ A continuacion vemos los tipos de datos y el tamaño del dataframe :
 ```{r }
 str(df)
 ```
+
+```{r }
+summary(df)
+```
+
+
 ## Gráfica de Dispersion 
 Utilizando la funcion nativa *plot* de R podemos visualizar un diagrama de dispersion para todas las variables del dataframe:
 
@@ -116,15 +122,9 @@ lm1 <- lm(non$charges~non$age)
 summary(lm1)
 ```
 
-```{r }
-
-plot(non$age, non$charges)+
-abline( -2091.42, 267.25)
-```
-
 ### Verificamos los supuestos del modelo: Normalidad de residuiales y Homogeneidad de varianza
 
-Test de Normalidad sobre los residuales: 
+### Test de Normalidad sobre los residuales: 
 Ho: Los errores son Normales
 Ha: Los errores No son Normales
 p-value <0.05 se rechaza la Ho
@@ -135,15 +135,7 @@ shapiro.test(l1res)
 ```
 Los residuales NO pasa la prueba de NORMALIDAD para este modelo
 
-### Homogeneidad de varianza
-Breush-Pagan test:
-Ho: Las varianzas son homogeneas
-Ha: LAs varianzas no son homogeneas
-Necesitamos un p-value mayor a 0.05 para No rechazar la hipotesis nula
-```{r }
-bptest(lm1)
-```
-La varianza es Homogénea
+
 
 ### Quitamos el intercepto del modelo
 
@@ -152,20 +144,54 @@ lm1.1 <- lm(non$charges~0 +non$age)
 summary(lm1.1)
 ```
 
-**RESUMEN DEL MODELO:**
+### Verificamos supuestos
 
-**Y = 220.162 x AGE**
-
-
+### Homogeneidad de varianza
+Breush-Pagan test:
+Ho: Las varianzas son homogeneas
+Ha: LAs varianzas no son homogeneas
+Necesitamos un p-value mayor a 0.05 para No rechazar la hipotesis nula
 ```{r }
-plot(non$age, non$charges)+
-abline( 0, 267.25)
+bptest(lm1)
 ```
-Este modelo sin intercepto es mucho mejro que el anterioir y ademas el R-cuadrado ha subido de 0.4 a 0.8
+### Normalidad Residuales
+Test de Normalidad sobre los residuales: 
+Ho: Los errores son Normales
+Ha: Los errores No son Normales
+p-value <0.05 se rechaza la Ho
+
 ```{r }
 l1res.1<- residuals(lm1.1)
 shapiro.test(l1res.1)
 ```
+
+Por último vemos que los residuales son significativamente grandes, del orden de $1.600, esto se explica gráficamente.
+
+```{r }
+
+plot(non$age, non$charges,main = 'Modelo SIN intercepto para NO FUMADORES', xlab = 'AGE', ylab = 'CHARGES')+
+abline( 0, 267.25)
+```
+
+```{r }
+
+plot(non$age, non$charges,main = 'Modelo CON intercepto para NO FUMADORES', xlab = 'AGE', ylab = 'CHARGES')+
+abline( -2091.42, 267.25)
+```
+
+
+A pesar de que en el modelo sin intercepto el R-cuadrado se eleva de 0.4 a 0.8, desafortunadamente los residuales incrementan $400 aún más  por lo que no es tan conveniente en este caso, gráficamente se puede ver porque es preferible el modelo con intercepto. 
+
+La razón es que el modelo intenta ajustar TODOS LOS PUNTOS de la dispersión, y los valores muy alejados de la linea estan actuando como outlayers de los datos que tienen explicitamente una relación lineal.
+
+
+**RESUMEN DEL MODELO:**
+
+**Y = 220.162xAGE - 2091.42 **
+
+Este modelo sin intercepto el R-cuadrado ha subido de 0.4 a 0.8, sin embargo el error es mayor.
+
+
 
 ## Si FUMADORES: COSTO vs BMI 
 
@@ -179,20 +205,23 @@ lm2.1 <- lm(yes$charges~ 0 + yes$bmi)
 summary(lm2.1)
 ```
 
-Obtenemos un R-cuadrado del 95% ¡
+Obtenemos un R-cuadrado del 95%¡
 
 **RESUMEN DEL MODELO:**
 
-**Y = 1061.08 x BMI**
-
+**Y = 1061.08 x BMI **
 
 ```{r }
-plot(yes$bmi, yes$charges)+
+plot(yes$bmi, yes$charges, main = "Modelo CON intercepto para SI FUMADORES", xlab = 'BMI', ylab = 'CHARGES')+
+abline( -13186.58,  1473.11)
+```
+```{r }
+plot(yes$bmi, yes$charges,main = "Modelo SIN intercepto para SI FUMADORES", xlab = 'BMI', ylab = 'CHARGES')+
 abline( 0, 1061.08)
 ```
 
 
-### HACEMOS VERIFICACION DE LOS SUPUESTOS
+### HACEMOS VERIFICACION DE LOS SUPUESTOS 
 
 ```{r }
 l2res<- residuals(lm2.1)
@@ -201,17 +230,35 @@ shapiro.test(l2res)
 ```{r }
 bptest(lm2)
 ```
-Podemos decir que en el modelo con intercepto existe homogeneidad de las varianzas pero en general sigue sin cumplirse el supuesto de normalidad de los residuales
+Podemos decir para los SI FUMADORES que en el modelo con intercepto tiene uno residuales muy pequeños y adecuados, sin embargo el intercepto es negativo y **NO EXPLICA** la realidad de que existan cobros negativos, sin embargo, para el modelo sin intercepto los residuales son mayores. 
+
+## ANALISIS DE VARIANZAS PARA LOS MODELOS EN GENERAL
+
+```{r }
+summary.aov(lm1)
+```
+```{r }
+summary.aov(lm1.1)
+```
+```{r }
+summary.aov(lm2)
+```
+```{r }
+summary.aov(lm2.1)
+```
 
 ## CONCLUSIÓN
 
 ```{r }
 plot(yes$bmi,yes$charges,type="p",col="red", ylim = c(0, 60000), xlab="Edad y BMI ", ylab="Costo salud")+
 lines(non$age, non$charges,type="p",col="green")+
-  abline( 0, 267.25)+
+  abline( -2091.42, 267.25)+
    abline( 0, 1061)
+
 ```
 
-Observando las distintas relaciones de las variables de interes con respecto a su comportamiento en las distintas variables categoricas, pudimos darnos cuentas de relaciones lineales importantes que nos permiten analizar estas categorias por separado pero llegar a *un modelo significativamente explicativo*.
+Observando las relaciones de la variables de interes con las otras variables en los diagramas y analizando su comportamiento con respecto a las variables categoricas, pudímos darnos cuenta de **relaciones lineales importantes** que nos permiten analizar por separado el problema de regresión lineal de la variable **'charges'**.
 
-El problema ahora sería verificar porque los residuales de los modelos NO estan cunmpliendo el supuesto de normalidad, tal vez haciendo una transformación adecuada de los datos para solucionarlo.
+El problema ahora sería verificar por qué los residuales de los modelos NO estan cumpliendo el supuesto de **NORMALIDAD**, tal vez haciendo una transformación adecuada de los datos para solucionarlo como una *estandarización*. Además de que tenemos el gran problema de los residuales, si observamos en cada modelo vemos que son diferentes de 0. 
+
+UNA SOLUCIÓN MÁS GENERAL sería sacar los outlayers del modelo de AGE vs CHARGE y obtener un mejor ajuste de los datos que estan en gráficamente se ven en la corriente principal suponiendo los otros datos como atipicos. 
