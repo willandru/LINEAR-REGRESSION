@@ -1,0 +1,174 @@
+---
+title: "Regresión Lineal Múltiple"
+author: "willandru"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#REGRESIÓN LINEAL MULTIPLE EN R
+Tenemos los datos del precio de las casas para diferentes distritos en California.
+
+Cada fila representa un distrito.
+
+Tenemos 10 atributos:
+
+-Longitud
+
+-Latitud
+
+-Edad media de la casa
+
+-Número de habitaciones
+
+-Número de camas
+
+-Población del distrito
+
+-Hogares en el distrito
+
+-Ingresos medios
+
+-Proximidad al Oceano
+
+# Importamos librerias
+
+```{r , echo=FALSE}
+library(Hmisc)
+library(PerformanceAnalytics)
+library(data.table)
+library(mltools)
+library(MASS)
+library(ggfortify)
+library(olsrr)
+library(tidyverse)
+```
+
+# Iniciamos con una Exploración del los Datos
+
+```{r }
+df <- read.csv('housing.csv')
+```
+
+
+### Observamos las primeras filas:
+```{r }
+head(df)
+```
+
+### Observamos un resumen del dataframe: 
+```{r }
+str(df)
+```
+
+### Observamos una descripción estadística de los datos:
+```{r }
+describe(df)
+```
+
+## OBSERVEMOS LA VARIABLE DE INTERES: El valor medio de una casa
+```{r }
+hist(df$median_house_value, breaks=100, main="Histograma de la variable Dependiente")
+```
+### Quitamos los valores outlayers de la variable de interes
+```{r , echo=FALSE}
+df<-df[df$median_house_value <500000, ] 
+hist(df$median_house_value, breaks=100, main="Histograma de la variable Dependiente")
+```
+
+### Agregamos algunas caracteristicas nuevas
+```{r }
+
+df <- na.omit(df)
+
+df$rooms_per_household <- df$total_rooms/ df$households
+df$bedrooms_per_room= df$total_bedrooms/ df$total_rooms
+df$population_per_household=df$population/ df$households
+df$ocean_proximity <- as.factor(df$ocean_proximity)
+
+str(df)
+```
+
+```{r }
+newdata<- one_hot(as.data.table(df))
+colnames(newdata)[10]  <- "ocean_proximity_1H_OCEAN"
+colnames(newdata)[13]  <- "ocean_proximity_NEAR_BAY"
+colnames(newdata)[14]  <- "ocean_proximity_NEAR_OCEAN"
+str(newdata)
+
+```
+### Observamos el diagrama de correlación
+```{r }
+
+chart.Correlation(newdata, histogram = TRUE)
+
+```
+### Observamos los coeficientes de correlación
+```{r }
+cor(newdata)
+```
+# Regresión Lineal Múltiple
+
+### Un resumen de los datos que utilizaremos
+```{r }
+d<- newdata
+str(d)
+
+```
+
+# Primer modelo: Ajustamos todas las variables 'independientes'
+```{r }
+modelo0<- lm(d$median_house_value ~ d$longitude+ d$latitude +d$housing_median_age + d$median_income + d$total_rooms + d$total_bedrooms+ d$population+ d$households +d$rooms_per_household+ d$bedrooms_per_room +d$population_per_household+ d$ocean_proximity_1H_OCEAN + d$ocean_proximity_INLAND + d$ocean_proximity_ISLAND + d$ocean_proximity_NEAR_BAY + d$ocean_proximity_NEAR_OCEAN)
+
+summary(modelo0)
+
+```
+### Observamos el AIC del modelo 0
+```{r }
+ 
+AIC(modelo0)
+```
+### Observamos los supuestos del modelo y el comportamiento de los residuales
+```{r }
+
+autoplot(modelo0)
+```
+### Observamos los intervalos de confianza de los coeficientes del modelo 0
+
+```{r }
+modelo0 %>% confint() %>% as_tibble()
+```
+```{r }
+
+ modelo0 %>% ols_plot_cooksd_bar()
+```
+
+## MODELO 1: Ajustando las mejores variables
+
+```{r }
+modelo1<- lm(d$median_house_value ~ d$housing_median_age + d$median_income + d$rooms_per_household+ d$bedrooms_per_room + d$ocean_proximity_1H_OCEAN + d$ocean_proximity_INLAND + d$ocean_proximity_ISLAND)
+summary(modelo1)
+```
+
+```{r }
+AIC(modelo1)
+```
+
+```{r }
+autoplot(modelo1)
+```
+
+```{r }
+ modelo1 %>% ols_plot_cooksd_bar()
+```
+```{r }
+modelo1 %>% confint() %>% as_tibble()
+```
+
+
+
+
+

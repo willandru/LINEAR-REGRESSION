@@ -62,7 +62,7 @@ Del anterior gráfico podemos ver que hay una relación lineal subdividida en tr
 ## Visualizamos la relación lineal y los 3 subgrupos que aparecen entre la EDAD y el COSTO
 
 ```{r }
-plot(x = df$age, y=df$charges)
+plot(x = df$age, y=df$charges, xlab = 'AGE', ylab = 'CHARGES', main = 'charges vs age')
 ```
 
 
@@ -77,6 +77,15 @@ Podemos ver que tenemos unos coeficientes de relación de 0.2 y además vemos qu
 ```{r }
 ggpairs(df, columns=1:7, ggplot2::aes(colour=smoker), progress = FALSE)
 ```
+
+#### Relación lineal aparente de los 2 subgrupos que aparecen entre BMI y el COSTO
+
+
+```{r }
+plot(x = df$bmi, y=df$charges,  col = factor(df$smoker), main = 'Fumadores vs No fumadores', xlab = 'BMI', ylab = 'CHARGES')
+
+```
+
 
 Aquí podemos observar varias cosas útiles:
 - Existe una correlación muy alta para los 'smoker=yes' de 0.8 con respecto al 'bmi'
@@ -250,7 +259,7 @@ summary.aov(lm2.1)
 ## CONCLUSIÓN
 
 ```{r }
-plot(yes$bmi,yes$charges,type="p",col="red", ylim = c(0, 60000), xlab="Edad y BMI ", ylab="Costo salud")+
+plot(yes$bmi,yes$charges,type="p",col="red", ylim = c(0, 60000), xlab="Edad y BMI ", ylab="Costo salud", main = 'Fumadores y No fumadores')+
 lines(non$age, non$charges,type="p",col="green")+
   abline( -2091.42, 267.25)+
    abline( 0, 1061)
