@@ -1,0 +1,6 @@
+
+- library(spdep): 
+	sudo apt install libudunits2-dev
+	sudo apt-get install libgdal-dev
+	+Dependencias
+	

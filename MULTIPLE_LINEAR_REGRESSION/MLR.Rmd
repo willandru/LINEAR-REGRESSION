@@ -36,11 +36,14 @@ Tenemos 10 atributos:
 
 # Importamos librerias
 
-```{r , echo=FALSE}
+```{r }
 library(Hmisc)
 library(PerformanceAnalytics)
+# Para utilizar la funcion one_hot()
 library(data.table)
 library(mltools)
+
+#
 library(MASS)
 library(ggfortify)
 library(olsrr)
