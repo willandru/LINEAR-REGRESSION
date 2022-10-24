@@ -172,6 +172,183 @@ modelo1 %>% confint() %>% as_tibble()
 ```
 
 
+# INICIO: ANÁLISIS ESPACIAL DE DATOS
+
+
+
+```{r }
+library(spdep)
+
+```
+```{r }
+queen.nb = poly2nb(newdata)
+rook.nb = poly2nb(newdata, queen=FALSE)
+
+```
+
+```{r }
+
+plot_map = ggplot(df, 
+                  aes(x = longitude, y = latitude, color = median_house_value 
+                    )) +
+              geom_point(aes(size = population), alpha = 0.4) +
+              xlab("Longitude") +
+              ylab("Latitude") +
+              ggtitle("Data Map - Longtitude vs Latitude and Associated Variables") +
+              
+              scale_color_distiller(palette = "Paired") +
+              labs(color = "Median House Value (in $USD)", size = "Population")
+
+```
+
+```{r }
+
+plot_map
+```
+
+```{r }
+
+ggplot(df, aes(x = factor(ocean_proximity))) +
+  geom_bar(stat = "count", color = "black", fill = "blue")
+```
+
+```{r }
+par(mfrow = c(3, 3))
+hist(df$longitude, breaks = 20, main = "longitude", border="darkorange", col="dodgerblue")
+hist(df$latitude, breaks = 20, main = "latitude", border="darkorange", col="dodgerblue")
+hist(df$housing_median_age, breaks = 20, main = "housing_median_age", border="darkorange", col="dodgerblue")
+hist(df$total_rooms, breaks = 20, main = "total_rooms", border="darkorange", col="dodgerblue")
+hist(df$total_bedrooms, breaks = 20, main = "total_bedrooms", border="darkorange", col="dodgerblue")
+hist(df$population, breaks = 20, main = "population", border="darkorange", col="dodgerblue")
+hist(df$households, breaks = 20, main = "households", border="darkorange", col="dodgerblue")
+hist(df$median_income, breaks = 20, main = "median_income", border="darkorange", col="dodgerblue")
+hist(df$median_house_value, breaks = 20, main = "median_house_value", border="darkorange", col="dodgerblue")
+
+```
+```{r }
+library(graphics)
+pairs(df, col = "dodgerblue")
+
+
+```
+
+```{r }
+library(knitr)
+housing_data_nc = df[, -10]
+
+corrmatrix = cor(housing_data_nc)
+
+kable(t(corrmatrix))
+
+```
+
+
+```{r }
+library(caret)
+set.seed(420)
+housing_trn_idx = createDataPartition(df$ocean_proximity, p = .70, list = FALSE)
+housing_trn_data = housing_data[housing_trn_idx, ]
+housing_tst_data = housing_data[-housing_trn_idx, ]
+
+
+```
+
+
+
+```{r }
+
+m1 = lm(df$median_house_value ~ ., df)
+summary(m1)
+```
+
+
+
+```{r }
+
+m2 = lm(df$median_house_value ~ .+ (.)^2, df)
+summary(m2)
+```
+
+
+
+```{r }
+m3 = lm(df$median_house_value ~ df$median_income + (df$median_income)^2 + (df$median_income)^3 + log(df$housing_median_age) +
+          log(df$total_rooms / df$population) + log(df$bedrooms_per_room / df$population) + log(df$population / df$households) + log(df$households))
+summary(m3)
+
+```
+
+
+
+```{r }
+a = read.csv('CODAT2003.csv')
+
+```
+
+
+
+```{r }
+str(a)
+
+```
+
+
+
+
+```{r }
+library(sf)
+library(dplyr)
+census_tracts <- st_read("california.shp", quiet = TRUE)
+
+```
+
+```{r }
+
+latlong_dat <- df[,c(1,2)]
+str(lat_long_dat)
+```
+
+
+
+```{r }
+
+system.time({
+  intersected <- st_intersects(latlong_sf, census_tracts)
+})
+```
+
+```{r }
+latlong_sf <- latlong_dat %>%
+  filter(!is.na(latitude), !is.na(longitude)) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(census_tracts))
+
+```
+
+```{r }
+
+latlong_final <- latlong_sf %>%
+  mutate(intersection = as.integer(intersected),
+         fips = if_else(is.na(intersection), "",
+                        census_tracts$GEOID[intersection]))
+head(latlong_final)
+```
+
+```{r }
+library(tigris)
+system.time({
+  for(i in 1:11){
+  census_block <- tigris::call_geolocator_latlon(lat = latlong_dat$latitude[i],
+                                                 lon = latlong_dat$longitude[i])
+  }
+  
+  (census_tract <- substr(census_block[i], start = 1, stop = 11))
+  
+})
+
+
+```
+
+
 
 
 
