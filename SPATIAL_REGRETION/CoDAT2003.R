@@ -34,3 +34,13 @@ lm.LMtests(reg1, listw1, test = "all")
 #LMlag
 #RLMerr: Tries to filter out some of the FP(FalsePositives) from the LMlag
 #Picking the one with the lower VALUE (?)
+
+
+#-----------------------------SLX------------------------
+# p=rho , T=theta , L=lambda
+# SLX : Spatially Lagged X y= XB + WXT +e
+library(spatialreg)
+
+reg2 = lmSLX(equation, data=df, listw1)
+summary(reg2)
+impacts(reg2, listw=listw1)
