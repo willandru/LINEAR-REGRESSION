@@ -10,6 +10,28 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 #REGRESIÓN LINEAL MULTIPLE EN R
+
+
+## Importamos librerias
+```{r }
+library(Hmisc)
+library(PerformanceAnalytics)
+# Para utilizar la funcion one_hot()
+library(data.table)
+library(mltools)
+#Para transformar a Camel CASE
+library(tools)
+#Para utilizar kable
+library(knitr)
+#Para el diagrama de dispersión
+library(GGally)
+library(MASS)
+library(ggfortify)
+library(olsrr)
+library(tidyverse)
+```
+##RECONOCIMIENTO DEL DATASET: CALIFORNIA HOUSING PRICES
+
 Tenemos los datos del precio de las casas para diferentes distritos en California.
 
 Cada fila representa un distrito.
@@ -34,36 +56,27 @@ Tenemos 10 atributos:
 
 -Proximidad al Oceano
 
-
-
-## Importamos librerias
 ```{r }
-library(Hmisc)
-library(PerformanceAnalytics)
-# Para utilizar la funcion one_hot()
-library(data.table)
-library(mltools)
-#Para transformar a Camel CASE
-library(tools)
-#Para utilizar kable
-library(knitr)
-#
-library(MASS)
-library(ggfortify)
-library(olsrr)
-library(tidyverse)
-```
-
-#ANÁLISIS EXPLORATORIO DE LOS DATOS
-
-A continuación haremos un anáĺisis exploratorio del dataset 'Housing.csv'.
-
-
-
-### OBSERVAMOS DATOS GENERALES
-```{r }
+#LEEMOS EL DATASET
 df <- read.csv('housing.csv')
 ```
+
+```{r }
+plot_map = ggplot(df, 
+                  aes(x = longitude, y = latitude, color = median_house_value 
+                    )) +
+              geom_point(aes(size = population), alpha = 0.4) +
+              xlab("Longitude") +
+              ylab("Latitude") +
+              ggtitle("Mapa de Longitud y Latitud : Precio Medio de las Casas") +
+              
+              scale_color_distiller(palette = "Spectral") +
+              labs(color = "Median House Value ($USD)", size = "Población")
+plot_map
+
+```
+
+
 
 ```{r }
 head(df)
@@ -72,48 +85,63 @@ head(df)
 ```{r }
 str(df)
 ```
-
 ```{r }
 summary(df)
-```
-## VISUALIZACIÓN 
-
-```{r }
-plot_map = ggplot(df, 
-                  aes(x = longitude, y = latitude, color = median_house_value 
-                    )) +
-              geom_point(aes(size = population), alpha = 0.4) +
-              xlab("Longitude") +
-              ylab("Latitude") +
-              ggtitle("Mapa de Longitud y Latitud : Precio Medio de las Casas") +
-              
-              scale_color_distiller(palette = "Set1") +
-              labs(color = "Median House Value ($USD)", size = "Pobalción")
-plot_map
 ```
 
 
 
 ## OBSERVEMOS LA VARIABLE DE INTERES: El valor Medio de una Casa de California 
 ```{r }
-hist(df$median_house_value, breaks=100, main="Precio Medio de las Casas", border="darkorange", col="dodgerblue")
+hist(df$median_house_value, breaks=100, main="Y : Precio Medio de las Casas", border="darkgoldenrod2", col="darkblue")
 ```
 
 ## OBSERVEMOS UN HISTOGRAMA DE TODOS LOS DATOS 
 
 ```{r }
-par(mfrow = c(3, 3))
-hist(df$longitude, breaks = 20, main = "longitude", border="darkorange", col="dodgerblue")
-hist(df$latitude, breaks = 20, main = "latitude", border="darkorange", col="dodgerblue")
-hist(df$housing_median_age, breaks = 20, main = "housing_median_age", border="darkorange", col="dodgerblue")
-hist(df$total_rooms, breaks = 20, main = "total_rooms", border="darkorange", col="dodgerblue")
-hist(df$total_bedrooms, breaks = 20, main = "total_bedrooms", border="darkorange", col="dodgerblue")
-hist(df$population, breaks = 20, main = "population", border="darkorange", col="dodgerblue")
-hist(df$households, breaks = 20, main = "households", border="darkorange", col="dodgerblue")
-hist(df$median_income, breaks = 20, main = "median_income", border="darkorange", col="dodgerblue")
-hist(df$median_house_value, breaks = 20, main = "median_house_value", border="darkorange", col="dodgerblue")
+par(mfrow = c(3,3))
+hist(df$longitude, breaks = 140, main = "longitude", border="darkorange", col="dodgerblue")
+hist(df$latitude, breaks = 140, main = "latitude", border="darkorange", col="dodgerblue")
+hist(df$housing_median_age, breaks = 140, main = "housing_median_age", border="darkorange", col="dodgerblue")
+hist(df$total_rooms, breaks = 140, main = "total_rooms", border="darkorange", col="dodgerblue")
+hist(df$total_bedrooms, breaks = 140, main = "total_bedrooms", border="darkorange", col="dodgerblue")
+hist(df$population, breaks = 140, main = "population", border="darkorange", col="dodgerblue")
+hist(df$households, breaks = 140, main = "households", border="darkorange", col="dodgerblue")
+hist(df$median_income, breaks = 140, main = "median_income", border="darkorange", col="dodgerblue")
+hist(df$median_house_value, breaks = 140, main = "median_house_value", border="darkorange", col="dodgerblue")
+```
+## OBSERVEMOS UNA DIAGRAMA DE DISPERSIÓN  DE TODOS LOS DATOS EXCEPTO LONGITUD Y LATITUD
+
+```{r }
+Z = df[,-1:-2]
+ggpairs(Z, columns=1:7, ggplot2::aes(colour=ocean_proximity), progress = FALSE)
+```
+
+```{r }
+Z = df[, -10]
+Z <- na.omit(Z)
+corrmatrix = cor(Z)
+t(corrmatrix)
+```
+
+## DIAGRAMAS DE DISPERSION
+```{r }
+par(mfrow = c(2,3))
+plot( df$housing_median_age,  df$median_house_value)
+plot(df$total_rooms,df$median_house_value)
+plot(df$total_bedrooms, df$median_house_value)
+plot(df$population, df$median_house_value)
+plot(df$households, df$median_house_value)
+plot(df$median_income, df$median_house_value)
+```
+
+## DESBALANCE EN ALGUNAS CARACTERISTICAS
+
+```{r }
+summary(df$ocean_proximity) 
 
 ```
+
 ```{r }
 
 ggplot(df, aes(x = factor(ocean_proximity))) + geom_bar(stat = "count", color = "black", fill = "black")+xlab("categoria") +
@@ -121,126 +149,301 @@ ggplot(df, aes(x = factor(ocean_proximity))) + geom_bar(stat = "count", color = 
               ggtitle("Proximidad al Oceano") 
 
 ```
+## PROBLEMAS DE DATOS CONCENTRADOS EN UN VALOR PARA ALGUNAS CARACTERISTICAS
+
+```{r }
+par(mfrow = c(1,3))
+plot(df$median_house_value~df$median_income, main="MEDIAN_INCOME")
+hist(df$median_income, breaks = 140, main = "MEDIAN_INCOME", border="chartreuse3", col="dodgerblue")
+out_median_income=boxplot(df$households, main="MEDIAN_INCOME")
+```
+
+```{r }
+par(mfrow = c(1,3))
+plot(df$median_house_value~df$total_rooms, main="TOTAL_ROOMS")
+hist(df$median_income, breaks = 140, main = "TOTAL_ROOMS", border="chartreuse4", col="darkred")
+out_total_rooms=boxplot(df$total_rooms, main="TOTAL_ROOMS")
+
+```
 
 
-## DATA ENGINEERING AND CLEANING
+```{r }
+par(mfrow = c(1,3))
+plot(df$median_house_value~df$total_bedrooms, main="TOTAL_BEDROOMS")
+hist(df$median_income, breaks = 140, main = "TOTAL_BEDROOMS", border="chartreuse4", col="darkred")
+out_total_bedrooms= boxplot(df$total_bedrooms, main="TOTAL_BEDROOMS")
 
-### Quitamos los valores outlayers de la variable de interes
+```
 
-```{r , echo=FALSE}
-df<-df[df$median_house_value <500000, ] 
+```{r }
+par(mfrow = c(1,3))
+plot(df$median_house_value~df$population, main="POPULATION")
+hist(df$median_income, breaks = 140, main = "POPULATION", border="chartreuse4", col="darkred")
+out_population= boxplot(df$population, main="POPULATION")
+```
+
+```{r }
+par(mfrow = c(1,3))
+plot(df$median_house_value~df$households, main="HOUSEHOLDS")
+hist(df$households, breaks = 140, main = "HOUSEHOLDS",border="chartreuse4", col="darkred")
+out_households= boxplot(df$households, main="HOUSEHOLDS")
+
+```
+
+```{r }
+par(mfrow = c(1,2))
+hist(df$median_house_value, breaks = 140, main = "MEDIAN_HOUSE_VALUE", border="chartreuse3", col="dodgerblue")
+out_median_value=boxplot(df$median_house_value, main="MEDIAN_HOUSE_VALUE")
+
+```
+
+## Pasamos las variables categoricas a 'ONE-HOT' y dejamos listo 'df' para regresión
+```{r }
 str(df)
 ```
 
 ```{r }
-hist(df$median_house_value, breaks=100, main="Precio Medio de las Casas", border="darkorange", col="dodgerblue")
-```
-
-### Quitamos las filas de 'ISLAND'
-
-```{r }
-df<-df[df$ocean_proximity != "ISLAND",] 
-str(df)
-```
-```{r }
-
-ggplot(df, aes(x = factor(ocean_proximity))) + geom_bar(stat = "count", color = "black", fill = "black")+xlab("categoria") +
-              ylab("n") +
-              ggtitle("Proximidad al Oceano") 
-
-```
-
-### Quitamos los valores nulos y AGREGAMOS NUEVAS VARIABLES 
-
-```{r }
-df <- na.omit(df)
-df$rooms_per_household <- df$total_rooms/ df$households
-df$bedrooms_per_room= df$total_bedrooms/ df$total_rooms
-df$population_per_household=df$population/ df$households
-df$ocean_proximity <- as.factor(df$ocean_proximity)
-
-str(df)
-```
-
-
-### Pasamos la variable categoria a ONE HOT ENCODING
-
-```{r }
+df$ocean_proximity = as.factor(df$ocean_proximity)
 df<- one_hot(as.data.table(df))
 colnames(df)[10]  <- "ocean_proximity_1H_OCEAN"
 colnames(df)[13]  <- "ocean_proximity_NEAR_BAY"
 colnames(df)[14]  <- "ocean_proximity_NEAR_OCEAN"
+df <- na.omit(df)
 str(df)
-
 ```
 
 
 
-# ANALISIS DE CORRELACION
-
-
-### Observamos los coeficientes de correlación
-```{r }
-cor(df)
-```
+# DATA CLEANING AND TRANSFORMING
 
 ```{r }
-
-housing_data = df[, -10]
-corrmatrix = cor(housing_data)
-kable(t(corrmatrix))
-
+cdf=df #clean_data_frame
+#cdf_lon_lat=df #clean_data_frame
 ```
+
+
+### Quitamos los valores nulos, los outlayers de MEDIAN_HOUSE_VALUE, la categoria inbalanceada de OCEAN_PROXIMITY y los datos espaciales LONGITUD y LATITUD
+```{r }
+#QUITAMOS LOS NAN's
+cdf <- na.omit(cdf)
+#QUITAMOS 'ISLANDS'
+cdf<-cdf[,-12] 
+#QUITMOS LONGITUD Y LATITUD
+#cdf <- cdf[,-1:-2]
+#REMOVEMOS ALGUNOS OUTLAYERS
+cdf<-cdf[cdf$median_house_value <500000, ] 
+cdf<-cdf[cdf$median_income <15, ] 
+cdf<-cdf[cdf$housing_median_age <49, ] 
+
+# QUITAMOS LOS OUTLAYERS
+#cdf<- cdf[-which(cdf$total_rooms%in% out_total_rooms),]
+#cdf<- cdf[-which(cdf$total_bedrooms%in% out_total_bedrooms),]
+#cdf<- cdf[-which(cdf$population%in% out_population),]
+#cdf<- cdf[-which(cdf$households%in% out_households),]
+#cdf<- cdf[-which(cdf$median_income%in% out_median_income),]
+#cdf<- cdf[-which(cdf$median_house_value%in% out_median_value),]
+
+
+str(cdf)
+```
+
+
+### TRANSFORMAMOS ALGUNAS VARIABLES PARA NORMALIZAR SUS HSITOGRAMAS
+
+
+```{r }
+cdf$rooms_per_household <- cdf$total_rooms/ cdf$households
+cdf$bedrooms_per_room= cdf$total_bedrooms/ cdf$total_rooms
+cdf$population_per_household=cdf$population/ cdf$households
+
+cdf$log_total_rooms=log(cdf$total_rooms)
+cdf$log_total_bedrooms=log(cdf$total_bedrooms)
+cdf$log_population=log(cdf$population)
+cdf$log_households=log(cdf$households)
+cdf$log_median_income=log(cdf$median_income)
+cdf$log_median_house_value=log(cdf$median_house_value)
+
+cdf$log_rooms_per_household <- cdf$log_total_rooms/ cdf$log_households
+cdf$log_bedrooms_per_room= cdf$log_total_bedrooms/ cdf$log_total_rooms
+cdf$log_population_per_household=cdf$log_population/ cdf$log_households
+
+cdf2=cdf
+cdf2$median_house_value=NULL
+cdf$log_median_house_value=NULL
+str(cdf)
+```
+
+```{r }
+corrmatrix = cor(cdf)
+t(corrmatrix)
+```
+
+```{r }
+corrmatrix = cor(cdf2)
+t(corrmatrix)
+```
+## CREEMOS UN 3 DATAFRAME ESTA VEZ ESCALANDO LOS DATOS 
+```{r }
+sdf=df #clean_data_frame
+summary(sdf)
+```
+```{r }
+
+library(scales)
+
+#QUITAMOS LOS NAN's
+
+
+
+#QUITAMOS 'ISLANDS'
+sdf<-sdf[,-12] 
+#QUITMOS LONGITUD Y LATITUD
+sdf <- sdf[,-1:-2]
+#REMOVEMOS ALGUNOS OUTLAYERS
+sdf<-sdf[sdf$median_house_value <500000, ] 
+sdf<-sdf[sdf$median_income <15, ] 
+sdf<-sdf[sdf$housing_median_age <49, ] 
+
+
+sdf$rooms_per_household <- sdf$total_rooms/ sdf$households
+sdf$bedrooms_per_room= sdf$total_bedrooms/ sdf$total_rooms
+sdf$population_per_household=sdf$population/ sdf$households
+
+sdf$median_house_value=rescale(sdf$median_house_value,to=c(1,15))
+sdf$housing_median_age=rescale(sdf$housing_median_age,to=c(1,15))
+sdf$total_rooms=rescale(sdf$total_rooms,to=c(1,15))
+sdf$total_bedrooms=rescale(sdf$total_bedrooms,to=c(1,15))
+sdf$population=rescale(sdf$population,to=c(1,15))
+sdf$households=rescale(sdf$households,to=c(1,15))
+sdf$rooms_per_household=rescale(sdf$rooms_per_household,to=c(1,15))
+sdf$bedrooms_per_room=rescale(sdf$bedrooms_per_room,to=c(1,15))
+sdf$population_per_household=rescale(sdf$population_per_household,to=c(1,15))
+
+
+sdf$log_total_rooms=log(sdf$total_rooms)
+sdf$log_total_bedrooms=log(sdf$total_bedrooms)
+sdf$log_population=log(sdf$population)
+sdf$log_households=log(sdf$households)
+sdf$log_median_income=log(sdf$median_income)
+sdf$log_median_house_value=
+sdf$log_rooms_per_household <- log(sdf$rooms_per_household)
+sdf$log_bedrooms_per_room= log(sdf$bedrooms_per_room)
+sdf$log_population_per_household=log(sdf$population_per_household)
+
+sdf2=sdf
+sdf2$median_house_value=NULL
+sdf$log_median_house_value=NULL
+
+summary(sdf)
+```
+
+```{r }
+corrmatrix = cor(sdf)
+t(corrmatrix)
+```
+
+```{r }
+corrmatrix = cor(sdf2)
+t(corrmatrix)
+```
+
+
 
 # Regresión Lineal Múltiple
 
-### Un resumen de los datos que utilizaremos
-```{r }
-str(df)
-
-```
 
 # Primer modelo: Ajustamos todas las variables 'independientes'
 ```{r }
-modelo0<- lm(df$median_house_value ~ . , df)
-modelo1 <- lm(df$median_house_value ~ (.)^2 ,df)
+m0<- lm(df$median_house_value ~ . , df)
+m1 <- lm(df$median_house_value ~ (.)^2 ,df)
+m2<- lm(cdf$median_house_value ~ . , cdf)
+m3 <- lm(cdf2$log_median_house_value ~ . , cdf2)
+m4<- lm(sdf$median_house_value ~ . , sdf)
+m5 <- lm(sdf2$log_median_house_value ~ . , sdf2)
 
 ```
 
 ### Observamos el resumen de los modelos
 ```{r }
-summary(modelo0)
+summary(m0)
+```
+```{r }
+summary(m1)
+```
+```{r }
+summary(m2)
+```
+```{r }
+summary(m3)
+```
+```{r }
+summary(m4)
+```
+```{r }
+summary(m5)
+```
+```{r }
+autoplot(m0)
+```
+```{r }
+autoplot(m1)
 ```
 
 ```{r }
-summary(modelo1)
-```
-
-
-
-### Observamos los supuestos del modelo y el comportamiento de los residuales
-```{r }
-autoplot(modelo0)
+autoplot(m2)
 ```
 ```{r }
-autoplot(modelo1)
+autoplot(m3)
 ```
+```{r }
+autoplot(m4)
+```
+
+
+```{r }
+autoplot(m5)
+```
+
 ### Observamos metricas de los modelos
 ```{r }
 
-modelo0_adjr2 = summary(modelo0)$adj.r.squared
-modelo1_adjr2 = summary(modelo1)$adj.r.squared
+m0_adjr2 = summary(m0)$adj.r.squared
+m1_adjr2 = summary(m1)$adj.r.squared
+m2_adjr2 = summary(m2)$adj.r.squared
+m3_adjr2 = summary(m3)$adj.r.squared
+m4_adjr2 = summary(m4)$adj.r.squared
+m5_adjr2 = summary(m5)$adj.r.squared
+
 beginning_mods_results = data.frame(
   "Total Predictors" =
-    c("Modelo 0" = extractAIC(modelo0)[1],
-      "Modelo 1" = extractAIC(modelo1)[1]),
+    c("m0" = extractAIC(m0)[1],
+      "m1" = extractAIC(m1)[1],
+      "m2" = extractAIC(m2)[1],
+      "m3" = extractAIC(m3)[1],
+      "m4" = extractAIC(m4)[1],
+      "m5" = extractAIC(m5)[1]
+      
+      ),
+  
   "AIC" =
-    c("Modelo 0" = extractAIC(modelo0)[2],
-      "Modelo 1" = extractAIC(modelo1)[2]),
+    c("m0" = extractAIC(m0)[2],
+      "m1" = extractAIC(m1)[2],
+      "m2" = extractAIC(m2)[2],
+      "m3" = extractAIC(m3)[2],
+      "m4" = extractAIC(m4)[2],
+      "m5" = extractAIC(m5)[2]
+      
+      ),
+  
   "Adj R-Squared" =
-    c("Modelo 0" = modelo0_adjr2,
-      "Modelo 1" = modelo1_adjr2
-      ))
+    c("m0" = m0_adjr2,
+      "m1" = m1_adjr2,
+      "m2" = m2_adjr2,
+      "m3" = m3_adjr2,
+      "m4" = m4_adjr2,
+      "m5" = m5_adjr2
+      )
+  )
 
 kable(beginning_mods_results, align = c("c", "r"))
 ```
@@ -248,21 +451,7 @@ kable(beginning_mods_results, align = c("c", "r"))
 
 
 # INICIO: ANÁLISIS ESPACIAL DE DATOS
-
-
-```{r }
-plot_map = ggplot(df, 
-                  aes(x = longitude, y = latitude, color = median_house_value 
-                    )) +
-              geom_point(aes(size = population), alpha = 0.4) +
-              xlab("Longitude") +
-              ylab("Latitude") +
-              ggtitle("Mapa de Longitud y Latitud : Precio Medio de las Casas") +
-              
-              scale_color_distiller(palette = "Paired") +
-              labs(color = "Median House Value ($USD)", size = "Pobalción")
-plot_map
-```
+## ANALISIS ESPACIAL DE LOS DATOS 
 
 
 ```{r }
@@ -275,13 +464,13 @@ library(maptools)
 
 ```{r }
 
-latlong_df <- df[,c(1,2)]
+latlong_df <- cdf[,c(1,2)]
 str(latlong_df)
 ```
 
 ```{r }
 
-counties <- map('county', fill=TRUE, col="transparent", plot=FALSE)
+counties <- maps::map('county', fill=TRUE, col="transparent", plot=FALSE)
 IDs <- sapply(strsplit(counties$names, ":"), function(x) x[1])
 counties_sp <- map2SpatialPolygons(counties, IDs=IDs,
                      proj4string=CRS("+proj=longlat +datum=WGS84"))
@@ -297,58 +486,139 @@ indices <- over(pointsSP, counties_sp)
 countyNames <- sapply(counties_sp@polygons, function(x) x@ID)
 my_data= countyNames[indices]
 my_data=sub("california,", "", my_data)
-df$county_name=toTitleCase(my_data)
-df <- na.omit(df)
 
-str(df)
+mdf=cdf
+mdf$county_name=toTitleCase(my_data)
+mdf$county_name=as.factor(mdf$county_name)
+mdf <- na.omit(mdf)
+str(mdf)
 ```
-
 
 
 # Segundo modelo: Ajustamos todas las variables 
 ```{r }
-m0<- lm(df$median_house_value ~ . , df)
-m1 <- lm(df$median_house_value ~ (.)^2 ,df)
+m6<- lm(mdf$median_house_value ~ . , mdf)
+m7<- lm(mdf$median_house_value ~ . , mdf)
+
 
 ```
 
-
 ```{r }
-summary(m0)
+summary(m6)
 
 ```
 ```{r }
-summary(m1)
+summary(m7)
+```
 
+```{r }
+autoplot(m6)
+
+```
+```{r }
+autoplot(m7)
 ```
 
 ### Observamos metricas de los modelos
 ```{r }
 
-m0_adjr2 = summary(m0)$adj.r.squared
-m1_adjr2 = summary(m1)$adj.r.squared
+m6_adjr2 = summary(m6)$adj.r.squared
+m7_adjr2 = summary(m7)$adj.r.squared
+
+
 beginning_mods_results = data.frame(
   "Total Predictors" =
-    c("Modelo 0" = extractAIC(m0)[1],
-      "Modelo 1" = extractAIC(m1)[1]),
+    c("m6" = extractAIC(m6)[1],
+      "m7" = extractAIC(m7)[1]
+      
+      ),
+  
   "AIC" =
-    c("Modelo 0" = extractAIC(m0)[2],
-      "Modelo 1" = extractAIC(m1)[2]),
+    c("m6" = extractAIC(m6)[2],
+      "m7" = extractAIC(m7)[2]
+
+      
+      ),
+  
   "Adj R-Squared" =
-    c("Modelo 0" = m0_adjr2,
-      "Modelo 1" = m1_adjr2
-      ))
+    c("m6" = m6_adjr2,
+      "m7" = m7_adjr2
+
+      )
+  )
 
 kable(beginning_mods_results, align = c("c", "r"))
 ```
 
+# MODELO FINAL
 
+```{r }
+library(dplyr)
+```
 
+```{r }
+str(cdf)
+```
+```{r }
+cor(cdf)
+```
+```{r }
 
+x.train <- sample_frac(tbl = cdf, replace = FALSE, size = 0.80)
+x.test <- anti_join(cdf, x.train)
 
+summary(x.train)
+```
 
+```{r }
+model <- lm(x.train$median_house_value ~ x.train$latitude + x.train$median_income + x.train$ocean_proximity_1H_OCEAN + x.train$ocean_proximity_INLAND + x.train$bedrooms_per_room + x.train$log_population_per_household ,x.train)
 
+```
+```{r }
+summary(model)
 
+```
 
+```{r }
+test_actual = x.test$median_house_value
+# the predicted house values for the test set
+test_predictions = predict(model, x.test)
+```
 
+```{r }
+# the RMSE
 
+test_rmse = sqrt(mean((test_actual - test_predictions)^2))
+# the percentage error
+
+test_rmse
+```
+## TRY2
+```{r }
+
+x.train <- sample_frac(tbl = df, replace = FALSE, size = 0.80)
+x.test <- anti_join(df, x.train)
+```
+
+```{r }
+model <- lm(x.train$median_house_value ~ .,x.train)
+
+```
+```{r }
+summary(model)
+
+```
+```{r }
+test_actual = x.test$median_house_value
+# the predicted house values for the test set
+test_predictions = predict(m1, x.test)
+```
+
+```{r }
+# the RMSE
+
+test_rmse = sqrt(mean((test_actual - test_predictions)^2))
+# the percentage error
+
+test_rmse
+```
