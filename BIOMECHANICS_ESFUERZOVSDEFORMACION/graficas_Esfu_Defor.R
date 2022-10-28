@@ -1,32 +1,21 @@
----
-title: "DATOS ESFUERZO VS DENSIDAD PLL 60% DENSIDAD"
-author: "willandru"
-date: "`r Sys.Date()`"
-output: html_document
----
-
-Los datasets utilizados, así como el codigo fuente en R y la version MarkDown lo encuentras en https://github.com/willandru/LINEAR-REGRESSION/tree/main/BIOMECHANICS_ESFUERZOVSDEFORMACION 
-
-# DIAGRAMAS DE ESFUERZO DEFORMACION PARA UNA PROBETA DE PLL 60% DENSIDAD
 
 
+#REGRESION PUNTOS OBTENIDOS EN LA PRACTICA DE BIOMECANICA: ESFUERZO VS DEFORMACION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Leemos los datos en R que vienen en un '.csv' con sus columnas bien nombradas y la tabla ubicada en ceros.
-```{r}
-#CARGAMOS LOS DATOS TIPO '.csv', arreglada la tabla en excel y los nombres de la gráfica, verificar que quede todo en orden. 
+
+#CARGAMOS LS DATOS '.csv'
 Specimen1 = read.csv('s1.csv')
 Specimen2 <- read.csv('s2.csv')
 Specimen3 <- read.csv('s3.csv')
 Specimen4 = read.csv('s4.csv')
 Specimen5 = read.csv('s5.csv')
-```
-
-
-# PRIMER GRÁFICA: Carga (N) vs Extensión de tracción (mm)
 
 # REMOVEMOS LOS DATOS ATÍPICOS: GRAFICA 1
-```{r}
-#debido a que R es diferente de excel, lo más facil y además en este caso no se afecta la grŕafica al eliminar estos vaores que en el momento d emedición perdieron su '.' decimal. LOS DATOS DEBEN TENER PUNTOS'.' no comas ',', ya que el archivo CSV utiliza ',' para separar cada campo del dataframe
+#debido a que R es diferente de excel, lo más facil y además en este caso no se afecta la grŕafica 
+#al eliminar estos vaores que en el momento d emedición perdieron su '.' decimal.
+#LOS DATOS DEBEN TENER PUNTOS'.' no comas ',', ya que el archivo CSV utiliza ',' para separar
+#cada campo del dataframe.
 
 Specimen1=Specimen1[Specimen1$carga<10000,]
 Specimen1=Specimen1[Specimen1$extension_de_traccion<20,]
@@ -44,11 +33,11 @@ Specimen4=tail(Specimen4, -2)
 Specimen5=Specimen5[Specimen5$carga<10000,]
 Specimen5=Specimen5[Specimen5$extension_de_traccion<20,]
 
-```
 
-## GRAFICAMOS: CARGA vs EXTENSION_DE_TRACCION
+##GRAFICA 1
 
-```{r }
+## GRAFICAMOS: CARGA vs EXTENSION_DE_TRACCIO
+
 #AGREGAMOS LA GRÁFICA O 'FIGURA' PRINCIPAL
 plot(Specimen1$extension_de_traccion, Specimen1$carga,  main="Carga vs Extensión de tracción", xlab= "Extensión de Tracción [mm]", ylab= "Carga [N]", type="l", xlim=c(0,20), ylim=c(0,1000))
 
@@ -64,14 +53,17 @@ text(x=13.3, y=410,label="s3")
 text(x=19.1, y=400,label="s5")
 text(x=14.5, y=400,label="s4")
 text(x=15.8, y=600,label="s1")
-```
 
 
 
-# GRAFICA 2: LIMPIAR DATOS ATIPICOS
-```{r}
-#debido a que R es diferente de excel, lo más facil y además en este caso no se afecta la grŕafica al eliminar estos vaores que en el momento d emedición perdieron su '.' decimal. LOS DATOS DEBEN TENER PUNTOS'.' no comas ',', ya que el archivo CSV utiliza ',' para separar cada campo del dataframe
 
+# GRAFICA 2
+
+#LIMPIAR DATOS ATIPICOS
+#debido a que R es diferente de excel, lo más facil y además en este caso no se afecta 
+#la grŕafica al eliminar estos vaores que en el momento d emedición perdieron su '.' decimal. 
+#LOS DATOS DEBEN TENER PUNTOS'.' no comas ',', ya que el archivo CSV utiliza ',' para separar cada
+#campo del dataframe.
 Specimen1=Specimen1[Specimen1$esfuerzo_de_traccion<1000,]
 Specimen1=Specimen1[Specimen1$desplazamiento_deformacion_uno<5,]
 
@@ -87,11 +79,8 @@ Specimen4=Specimen4[Specimen4$desplazamiento_deformacion_uno<5,]
 Specimen5=Specimen5[Specimen5$esfuerzo_de_traccion<800,]
 Specimen5=Specimen5[Specimen5$desplazamiento_deformacion_uno<5,]
 
-```
 
 ## GRAFICAMOS: Esfuerzo traccion vs Desplazamiento deformacion
-
-```{r }
 #AGREGAMOS LA GRÁFICA O 'FIGURA' PRINCIPAL
 plot(Specimen1$desplazamiento_deformacion_uno, Specimen1$esfuerzo_de_traccion,  main="Esfuerzo traccion vs Desplazamiento deformacion", xlab= " Desplazamiento Deformación 1 [mm]", ylab= "Esfuerzo de tracción [MPa]", type="l", ylim=c(0,25))
 
@@ -124,15 +113,13 @@ abline(v=Specimen2$desplazamiento_deformacion_uno[high_band], col="yellow")
 abline(v=Specimen2$desplazamiento_deformacion_uno[low_band], col="green")
 abline(v=Specimen2$desplazamiento_deformacion_uno[high_band], col="green")
 
-```
-
 
 
 # REGRESION LINEAL: DETERMINAR EL MODULO DE YOUN DE LA ZONA ELASTICA
 
-- El modulo de Young se extrae de la gráfica de Esfuerzo vs Deformación
+#El modulo de Young se extrae de la gráfica de Esfuerzo vs Deformación
 
-```{r}
+
 #EXTRAEMOS LAS COLUMNAS Y FILAS QUE UTILIZAREMOS PARA HACER LA REGRESIÓN: Recortamos filas porque solo queremos la region elastica, recortamos columnas porque queremos ajustar la recta con un porcentaje especifico de los Datos según la norma ISO 527
 
 deformacion_specimen1=Specimen1$desplazamiento_deformacion_uno
@@ -149,27 +136,21 @@ deformacion_specimen2=deformacion_specimen2[low_band:high_band]
 esfuerzo_specimen2=Specimen2$esfuerzo_de_traccion
 esfuerzo_specimen2=esfuerzo_specimen2[low_band:high_band]
 
-
 deformacion_specimen3=Specimen3$desplazamiento_deformacion_uno
 deformacion_specimen3=deformacion_specimen3[low_band:high_band]
 esfuerzo_specimen3=Specimen3$esfuerzo_de_traccion
 esfuerzo_specimen3=esfuerzo_specimen3[low_band:high_band]
-
-
 
 deformacion_specimen4=Specimen4$desplazamiento_deformacion_uno
 deformacion_specimen4=deformacion_specimen4[low_band:high_band]
 esfuerzo_specimen4=Specimen4$esfuerzo_de_traccion
 esfuerzo_specimen4=esfuerzo_specimen4[low_band:high_band]
 
-
 deformacion_specimen5=Specimen5$desplazamiento_deformacion_uno
 deformacion_specimen5=deformacion_specimen5[low_band:high_band]
 esfuerzo_specimen5=Specimen5$esfuerzo_de_traccion
 esfuerzo_specimen5=esfuerzo_specimen5[low_band:high_band]
-```
 
-```{r }
 par(mfrow = c(2,3))
 plot( deformacion_specimen1,  esfuerzo_specimen1)
 plot( deformacion_specimen2,  esfuerzo_specimen2)
@@ -177,23 +158,17 @@ plot( deformacion_specimen3,  esfuerzo_specimen3)
 plot( deformacion_specimen4,  esfuerzo_specimen4)
 plot( deformacion_specimen5,  esfuerzo_specimen5)
 
-```
-
 #REGERSIÓN LINEAL
 
-
-```{r }
 regresion1= lm(esfuerzo_specimen1 ~ deformacion_specimen1)
 regresion2= lm(esfuerzo_specimen2 ~ deformacion_specimen2)
 regresion3= lm(esfuerzo_specimen3 ~ deformacion_specimen3)
 regresion4= lm(esfuerzo_specimen4 ~ deformacion_specimen4)
 regresion5= lm(esfuerzo_specimen5 ~ deformacion_specimen5)
 
-```
 
 ### RESULTADOS
 
-```{r }
 young1=regresion1$coefficients[2]
 young2=regresion2$coefficients[2]
 young3=regresion3$coefficients[2]
@@ -215,7 +190,7 @@ beginning_mods_results = data.frame(
       "Specimen4" = young4,
       "Specimen5" = young5
       
-      ),
+    ),
   
   "Intervalo_95_confinza" =
     c("Specimen1" = intervalo1,
@@ -223,13 +198,14 @@ beginning_mods_results = data.frame(
       "Specimen3" = intervalo3,
       "Specimen4" = intervalo4,
       "Specimen5" = intervalo5
-      )
-  )
+    )
+)
+
+t(beginning_mods_results)
 
 #Para utilizar kable
 library(knitr)
 kable(beginning_mods_results, align = c("c", "r"))
-```
 
 
 
