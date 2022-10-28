@@ -611,7 +611,7 @@ summary(model)
 ```{r }
 test_actual = x.test$median_house_value
 # the predicted house values for the test set
-test_predictions = predict(m1, x.test)
+test_predictions = predict(model, x.test)
 ```
 
 ```{r }
@@ -620,5 +620,37 @@ test_predictions = predict(m1, x.test)
 test_rmse = sqrt(mean((test_actual - test_predictions)^2))
 # the percentage error
 
+test_rmse
+```
+
+## TRY3                                                     {r }
+
+
+```{r }
+
+x.train<-sample_frac(tbl=cdf,replace=FALSE,size=0.80)                                                       x.test<-anti_join(cdf,x.train)
+ 
+                                                      
+ model2<-lm(x.train$median_house_value~x.train$log_total_rooms + x.train$latitud  + x.train$median_income + x.train$ocean_proximity_1H_OCEAN  + x.train$ocean_proximity_inland + x.train$beedrooms_per_room  +  x.train$log_population_per_household  ,x.train)
+```
+                                                                                                                  
+```{r }
+summary(model2)
+
+```
+
+```{r }
+ test_actual=x.test$median_house_value
+
+ test_predictions=predict(model2,x.test)         
+
+```    
+
+
+
+```{r }
+# the RMSE
+test_rmse = sqrt(mean((test_actual - test_predictions)^2))
+# the percentage error
 test_rmse
 ```
