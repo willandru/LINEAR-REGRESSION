@@ -1,0 +1,210 @@
+---
+title: "MNIST"
+author: "willandru"
+date: "21/11/2022"
+output: html_document
+---
+
+
+# MNIST: Imagenes de números escritos a mano.
+
+```{r}
+
+```
+
+
+
+```{r}
+N=1000
+
+read.training = file("train-images.idx3-ubyte", "rb")
+readBin(read.training,'integer',n=1,size=4,endian='big')
+nrow = readBin(read.training,'integer',n=1,size=4,endian='big')
+ncol = readBin(read.training,'integer',n=1,size=4,endian='big')
+x = data.frame()
+for(i in 1:N){m = readBin(read.training,'integer',n=28*28,size=1,signed=F);
+    x <- rbind(x, m)}
+     close(read.training)
+     
+     
+read.labels = file("train-labels.idx1-ubyte", "rb")
+readBin(read.labels,'integer',n=1,size=4,endian='big')
+n = readBin(read.labels,'integer',n=1,size=4,endian='big')
+y = readBin(read.labels,'integer',n=n,size=1,signed=F)
+close(read.labels)
+y=data.frame(sapply(as.numeric(y[1:N]), c))
+
+
+df =x
+df['Y'] <- y
+
+```
+
+```{r}
+head(df)
+```
+
+
+
+```{r}
+#x= as.matrix(x,  nrow = 2000, ncol = 784)
+#model = lm(Y~., df)
+
+#modelo1 <- glm (as.factor(Y) ~ ., family=binomial(link="probit"), data=df)
+
+#modelo1=glm(as.factor(y)~as.data.frame(x),family=binomial(link="probit"))
+summary(modelo1)
+
+
+
+
+
+```
+```{r}
+DF=df[(df$Y==0) | (df$Y==1),]
+
+```
+```{r}
+set.seed(111)
+split <- sort(sample(nrow(DF), nrow(DF)*0.7))
+training <- DF[split,]
+testing <- DF[-split,]
+```
+```{r}
+log_model <- glm(as.factor(Y) ~ .-Y,
+                 family = binomial,
+                 data = training)
+summary(log_model)
+```
+```{r}
+probabilities <- predict(log_model, 
+                       newdata = testing,
+                       type = "response")
+```
+
+```{r}
+predictions <- ifelse(probabilities > 0.5, "1", "0")
+table(predictions, testing$Y)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+install.packages('stats4')
+install.packages('splines')
+install.packages('VGAM')
+library(stats4) #Load package stats
+library(splines) #Load package splines
+#To load package VGAM, need to load package stats4 and splines.
+library(VGAM) #
+
+
+```
+
+```{r}
+model <- vglm( Y ~., family=multinomial, df)
+```
+
+```{r}
+summary(model)
+```
+
+```{r}
+probas<- predict(model, df[,1:784], type="response")
+preds <- apply(probas, 1, which.max)
+preds[which(preds=="0")] <- levels(df$Y)[1]
+preds[which(preds=="1")] <- levels(df$Y)[2]
+preds[which(preds=="2")] <- levels(df$Y)[3]
+preds[which(preds=="3")] <- levels(df$Y)[4]
+preds[which(preds=="4")] <- levels(df$Y)[5]
+preds[which(preds=="5")] <- levels(df$Y)[6]
+preds[which(preds=="6")] <- levels(df$Y)[7]
+preds[which(preds=="7")] <- levels(df$Y)[8]
+preds[which(preds=="8")] <- levels(df$Y)[9]
+preds[which(preds=="9")] <- levels(df$Y)[10]
+
+
+# Summarize accuracy
+table(df$Y, predictions) 
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+```
+```{r}
+
+```
+```{r}
+
+```

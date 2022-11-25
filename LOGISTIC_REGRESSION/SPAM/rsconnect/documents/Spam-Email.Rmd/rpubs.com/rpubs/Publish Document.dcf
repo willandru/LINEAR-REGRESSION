@@ -1,0 +1,11 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/974513/eaf41308b8d84deb8fff08fde9d3a1ee
+bundleId: https://api.rpubs.com/api/v1/document/974513/eaf41308b8d84deb8fff08fde9d3a1ee
+url: http://rpubs.com/willandru/974513
+when: 1669294710.31247
+lastSyncTime: 1669294710.31249

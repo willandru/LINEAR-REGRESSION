@@ -1,0 +1,51 @@
+---
+title: "Iris"
+author: "Susana Echeverri Jaramillo"
+date: "23/11/2022"
+output: html_document
+---
+
+# IRIS
+
+```{r }
+str(iris)
+```
+
+```{r }
+install.packages('stats4')
+install.packages('splines')
+install.packages('VGAM')
+```
+
+```{r }
+library(stats4) #Load package stats
+library(splines) #Load package splines
+#To load package VGAM, need to load package stats4 and splines.
+library(VGAM) 
+
+```
+
+```{r }
+library(dplyr)
+library(MASS)
+fit.MLR <- vglm( Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, family=multinomial, iris)
+
+```
+
+```{r }
+summary(fit.MLR)
+
+
+```
+
+```{r }
+probabilities.MLR <- predict(fit.MLR, iris[,1:4], type="response")
+predictions <- apply(probabilities.MLR, 1, which.max)
+predictions[which(predictions=="1")] <- levels(iris$Species)[1]
+predictions[which(predictions=="2")] <- levels(iris$Species)[2]
+predictions[which(predictions=="3")] <- levels(iris$Species)[3]
+
+# Summarize accuracy
+table(iris$Species, predictions) 
+
+```
